@@ -1,6 +1,7 @@
 [![Pub Package](https://img.shields.io/pub/v/udisks.svg)](https://pub.dev/packages/udisks)
 
-Provides a client to connect to [UDisks](https://github.com/storaged-project/udisks) - the service that ca access and manipulate disks, storage devices and technologies on Linux.
+Provides a client to connect to
+[UDisks](https://github.com/storaged-project/udisks) - the service that accesses and manipulates disks, storage devices and technologies on Linux.
 
 ```dart
 import 'package:dbus/dbus.dart';
