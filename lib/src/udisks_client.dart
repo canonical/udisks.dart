@@ -230,7 +230,8 @@ class UDisksClient {
   final DBusClient systemBus;
 
   /// Supported encryption types.
-  List<String> get supportedEncryptionTypes => _manager.supportedEncryptionTypes;
+  List<String> get supportedEncryptionTypes =>
+      _manager.supportedEncryptionTypes;
 
   /// Supported filesystems.
   List<String> get supportedFilesystems => _manager.supportedFilesystems;
