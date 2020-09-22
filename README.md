@@ -13,3 +13,7 @@ await client.connect();
 print('Running UDisks ${client.version}');
 await systemBus.close();
 ```
+
+## Contributing to udisks.dart
+
+We welcome contributions! See the [contribution guide](CONTRIBUTING.md) for more details.
