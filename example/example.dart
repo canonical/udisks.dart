@@ -6,5 +6,6 @@ void main() async {
   var client = UDisksClient(systemBus);
   await client.connect();
   print('Running UDisks ${client.version}');
+  client.close();
   await systemBus.close();
 }

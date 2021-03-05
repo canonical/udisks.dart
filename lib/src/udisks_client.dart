@@ -6,16 +6,20 @@ class _UDisksManager {
   _UDisksObject object;
   final String managerInterface = 'org.freedesktop.UDisks2.Manager';
 
-  List<String> get supportedEncryptionTypes => object.getStringArrayProperty(
-      managerInterface, 'SupportedEncryptionTypes');
+  List<String> get supportedEncryptionTypes =>
+      object.getStringArrayProperty(
+          managerInterface, 'SupportedEncryptionTypes') ??
+      [];
 
   List<String> get supportedFilesystems =>
-      object.getStringArrayProperty(managerInterface, 'SupportedFilesystems');
+      object.getStringArrayProperty(managerInterface, 'SupportedFilesystems') ??
+      [];
 
   String get defaultEncryptionType =>
-      object.getStringProperty(managerInterface, 'DefaultEncryptionType');
+      object.getStringProperty(managerInterface, 'DefaultEncryptionType') ?? '';
 
-  String get version => object.getStringProperty(managerInterface, 'Version');
+  String get version =>
+      object.getStringProperty(managerInterface, 'Version') ?? '';
 
   _UDisksManager(this.object);
 }
@@ -61,7 +65,7 @@ class _UDisksObject extends DBusRemoteObject {
   }
 
   /// Gets a cached property.
-  DBusValue getCachedProperty(String interfaceName, String name) {
+  DBusValue? getCachedProperty(String interfaceName, String name) {
     var interface = interfaces[interfaceName];
     if (interface == null) {
       return null;
@@ -70,7 +74,7 @@ class _UDisksObject extends DBusRemoteObject {
   }
 
   /// Gets a cached boolean property, or returns null if not present or not the correct type.
-  bool getBooleanProperty(String interface, String name) {
+  bool? getBooleanProperty(String interface, String name) {
     var value = getCachedProperty(interface, name);
     if (value == null) {
       return null;
@@ -82,7 +86,7 @@ class _UDisksObject extends DBusRemoteObject {
   }
 
   /// Gets a cached unsigned 8 bit integer property, or returns null if not present or not the correct type.
-  int getByteProperty(String interface, String name) {
+  int? getByteProperty(String interface, String name) {
     var value = getCachedProperty(interface, name);
     if (value == null) {
       return null;
@@ -94,7 +98,7 @@ class _UDisksObject extends DBusRemoteObject {
   }
 
   /// Gets a cached signed 32 bit integer property, or returns null if not present or not the correct type.
-  int getInt32Property(String interface, String name) {
+  int? getInt32Property(String interface, String name) {
     var value = getCachedProperty(interface, name);
     if (value == null) {
       return null;
@@ -106,7 +110,7 @@ class _UDisksObject extends DBusRemoteObject {
   }
 
   /// Gets a cached unsigned 32 bit integer property, or returns null if not present or not the correct type.
-  int getUint32Property(String interface, String name) {
+  int? getUint32Property(String interface, String name) {
     var value = getCachedProperty(interface, name);
     if (value == null) {
       return null;
@@ -118,7 +122,7 @@ class _UDisksObject extends DBusRemoteObject {
   }
 
   /// Gets a cached signed 64 bit integer property, or returns null if not present or not the correct type.
-  int getInt64Property(String interface, String name) {
+  int? getInt64Property(String interface, String name) {
     var value = getCachedProperty(interface, name);
     if (value == null) {
       return null;
@@ -130,7 +134,7 @@ class _UDisksObject extends DBusRemoteObject {
   }
 
   /// Gets a cached unsigned 64 bit integer property, or returns null if not present or not the correct type.
-  int getUint64Property(String interface, String name) {
+  int? getUint64Property(String interface, String name) {
     var value = getCachedProperty(interface, name);
     if (value == null) {
       return null;
@@ -142,7 +146,7 @@ class _UDisksObject extends DBusRemoteObject {
   }
 
   /// Gets a cached string property, or returns null if not present or not the correct type.
-  String getStringProperty(String interface, String name) {
+  String? getStringProperty(String interface, String name) {
     var value = getCachedProperty(interface, name);
     if (value == null) {
       return null;
@@ -154,7 +158,7 @@ class _UDisksObject extends DBusRemoteObject {
   }
 
   /// Gets a cached string array property, or returns null if not present or not the correct type.
-  List<String> getStringArrayProperty(String interface, String name) {
+  List<String>? getStringArrayProperty(String interface, String name) {
     var value = getCachedProperty(interface, name);
     if (value == null) {
       return null;
@@ -169,7 +173,7 @@ class _UDisksObject extends DBusRemoteObject {
   }
 
   /// Gets a cached object path property, or returns null if not present or not the correct type.
-  DBusObjectPath getObjectPathProperty(String interface, String name) {
+  DBusObjectPath? getObjectPathProperty(String interface, String name) {
     var value = getCachedProperty(interface, name);
     if (value == null) {
       return null;
@@ -181,7 +185,7 @@ class _UDisksObject extends DBusRemoteObject {
   }
 
   /// Gets a cached object path array property, or returns null if not present or not the correct type.
-  List<DBusObjectPath> getObjectPathArrayProperty(
+  List<DBusObjectPath>? getObjectPathArrayProperty(
       String interface, String name) {
     var value = getCachedProperty(interface, name);
     if (value == null) {
@@ -197,7 +201,7 @@ class _UDisksObject extends DBusRemoteObject {
   }
 
   /// Gets a cached list of data property, or returns null if not present or not the correct type.
-  List<Map<String, dynamic>> getDataListProperty(
+  List<Map<String, dynamic>>? getDataListProperty(
       String interface, String name) {
     var value = getCachedProperty(interface, name);
     if (value == null) {
@@ -231,42 +235,41 @@ class UDisksClient {
 
   /// Supported encryption types.
   List<String> get supportedEncryptionTypes =>
-      _manager.supportedEncryptionTypes;
+      _manager?.supportedEncryptionTypes ?? [];
 
   /// Supported filesystems.
-  List<String> get supportedFilesystems => _manager.supportedFilesystems;
+  List<String> get supportedFilesystems => _manager?.supportedFilesystems ?? [];
 
   /// Default encryption type.
-  String get defaultEncryptionType => _manager.defaultEncryptionType;
+  String get defaultEncryptionType => _manager?.defaultEncryptionType ?? '';
 
   /// The version of the UDisks daemon.
-  String get version => _manager.version;
+  String get version => _manager?.version ?? '';
 
   // The root D-Bus UDisks object at path '/org/freedesktop/UDisks2'.
-  DBusRemoteObject _root;
+  final DBusRemoteObject _root;
 
   /// Objects exported on the bus.
   final _objects = <DBusObjectPath, _UDisksObject>{};
 
   /// Subscription to object manager signals.
-  StreamSubscription _objectManagerSubscription;
+  StreamSubscription? _objectManagerSubscription;
 
   /// Manager object
-  _UDisksManager _manager;
+  _UDisksManager? _manager;
 
   /// Creates a new UDisks client connected to the system D-Bus.
-  UDisksClient(this.systemBus);
+  UDisksClient(this.systemBus)
+      : _root = DBusRemoteObject(systemBus, 'org.freedesktop.UDisks2',
+            DBusObjectPath('/org/freedesktop/UDisks2'));
 
   /// Connects to the UDisks D-Bus objects.
   /// Must be called before accessing methods and properties.
-  void connect() async {
+  Future<void> connect() async {
     // Already connected
-    if (_root != null) {
+    if (_objectManagerSubscription != null) {
       return;
     }
-
-    _root = DBusRemoteObject(systemBus, 'org.freedesktop.UDisks2',
-        DBusObjectPath('/org/freedesktop/UDisks2'));
 
     // Subscribe to changes
     var signals = _root.subscribeObjectManagerSignals();
@@ -300,14 +303,17 @@ class UDisksClient {
           _UDisksObject(systemBus, objectPath, interfacesAndProperties);
     });
 
-    _manager = _UDisksManager(
-        _objects[DBusObjectPath('/org/freedesktop/UDisks2/Manager')]);
+    var managerObject =
+        _objects[DBusObjectPath('/org/freedesktop/UDisks2/Manager')];
+    if (managerObject != null) {
+      _manager = _UDisksManager(managerObject);
+    }
   }
 
   /// Terminates all active connections. If a client remains unclosed, the Dart process may not terminate.
   void close() {
     if (_objectManagerSubscription != null) {
-      _objectManagerSubscription.cancel();
+      _objectManagerSubscription!.cancel();
       _objectManagerSubscription = null;
     }
   }
