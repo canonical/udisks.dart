@@ -231,7 +231,8 @@ class _UDisksObject extends DBusRemoteObject {
 /// A client that connects to UDisks.
 class UDisksClient {
   /// The bus this client is connected to.
-  final DBusClient systemBus;
+  final DBusClient _bus;
+  final bool _closeBus;
 
   /// Supported encryption types.
   List<String> get supportedEncryptionTypes =>
@@ -247,7 +248,7 @@ class UDisksClient {
   String get version => _manager?.version ?? '';
 
   // The root D-Bus UDisks object at path '/org/freedesktop/UDisks2'.
-  final DBusRemoteObject _root;
+  late final DBusRemoteObject _root;
 
   /// Objects exported on the bus.
   final _objects = <DBusObjectPath, _UDisksObject>{};
@@ -259,9 +260,12 @@ class UDisksClient {
   _UDisksManager? _manager;
 
   /// Creates a new UDisks client connected to the system D-Bus.
-  UDisksClient(this.systemBus)
-      : _root = DBusRemoteObject(systemBus, 'org.freedesktop.UDisks2',
-            DBusObjectPath('/org/freedesktop/UDisks2'));
+  UDisksClient({DBusClient? bus})
+      : _bus = bus ?? DBusClient.system(),
+        _closeBus = bus == null {
+    _root = DBusRemoteObject(_bus, 'org.freedesktop.UDisks2',
+        DBusObjectPath('/org/freedesktop/UDisks2'));
+  }
 
   /// Connects to the UDisks D-Bus objects.
   /// Must be called before accessing methods and properties.
@@ -280,7 +284,7 @@ class UDisksClient {
           object.updateInterfaces(signal.interfacesAndProperties);
         } else {
           _objects[signal.changedPath] = _UDisksObject(
-              systemBus, signal.changedPath, signal.interfacesAndProperties);
+              _bus, signal.changedPath, signal.interfacesAndProperties);
         }
       } else if (signal is DBusObjectManagerInterfacesRemovedSignal) {
         var object = _objects[signal.changedPath];
@@ -300,7 +304,7 @@ class UDisksClient {
     var objects = await _root.getManagedObjects();
     objects.forEach((objectPath, interfacesAndProperties) {
       _objects[objectPath] =
-          _UDisksObject(systemBus, objectPath, interfacesAndProperties);
+          _UDisksObject(_bus, objectPath, interfacesAndProperties);
     });
 
     var managerObject =
@@ -311,10 +315,13 @@ class UDisksClient {
   }
 
   /// Terminates all active connections. If a client remains unclosed, the Dart process may not terminate.
-  void close() {
+  Future<void> close() async {
     if (_objectManagerSubscription != null) {
-      _objectManagerSubscription!.cancel();
+      await _objectManagerSubscription!.cancel();
       _objectManagerSubscription = null;
+    }
+    if (_closeBus) {
+      await _bus.close();
     }
   }
 }

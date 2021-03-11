@@ -4,15 +4,13 @@ Provides a client to connect to
 [UDisks](https://github.com/storaged-project/udisks) - the service that accesses and manipulates disks, storage devices and technologies on Linux.
 
 ```dart
-import 'package:dbus/dbus.dart';
 import 'package:udisks/udisks.dart';
 
-var systemBus = DBusClient.system();
-var client = UDisksClient(systemBus);
+var client = UDisksClient();
 await client.connect();
 print('Running UDisks ${client.version}');
-client.close();
-await systemBus.close();
+print('Supported filesystems: ${client.supportedFilesystems.join(' ')}');
+await client.close();
 ```
 
 ## Contributing to udisks.dart
