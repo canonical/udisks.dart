@@ -248,7 +248,7 @@ class UDisksClient {
   String get version => _manager?.version ?? '';
 
   // The root D-Bus UDisks object at path '/org/freedesktop/UDisks2'.
-  late final DBusRemoteObject _root;
+  late final DBusRemoteObjectManager _root;
 
   /// Objects exported on the bus.
   final _objects = <DBusObjectPath, _UDisksObject>{};
@@ -263,7 +263,7 @@ class UDisksClient {
   UDisksClient({DBusClient? bus})
       : _bus = bus ?? DBusClient.system(),
         _closeBus = bus == null {
-    _root = DBusRemoteObject(_bus, 'org.freedesktop.UDisks2',
+    _root = DBusRemoteObjectManager(_bus, 'org.freedesktop.UDisks2',
         DBusObjectPath('/org/freedesktop/UDisks2'));
   }
 
@@ -276,8 +276,7 @@ class UDisksClient {
     }
 
     // Subscribe to changes
-    var signals = _root.subscribeObjectManagerSignals();
-    _objectManagerSubscription = signals.listen((signal) {
+    _objectManagerSubscription = _root.signals.listen((signal) {
       if (signal is DBusObjectManagerInterfacesAddedSignal) {
         var object = _objects[signal.changedPath];
         if (object != null) {
