@@ -1,5 +1,5 @@
 name: udisks
-version: 0.0.0-dev.3
+version: 0.1.0
 
 description:
   Provides a client to connect to UDisks - the service that accesses and manipulates disks, storage devices and technologies on Linux.
