@@ -2,6 +2,9 @@ import 'dart:async';
 
 import 'package:dbus/dbus.dart';
 
+/// Method for erasing data when formatting.
+enum UDisksFormatEraseMethod { zero, ataSecureErase, ataSecureEraseEnhanced }
+
 /// A drive on this system.
 class UDisksDrive {
   final String _driveInterfaceName = 'org.freedesktop.UDisks2.Drive';
@@ -152,6 +155,361 @@ class UDisksDrive {
   }
 }
 
+/// Block device configuration.
+class UDisksConfigurationItem {
+  // The type of configuration, e.g. 'fstab'.
+  final String type;
+
+  /// Configuration data for [type].
+  final Map<String, DBusValue> details;
+
+  const UDisksConfigurationItem(this.type, this.details);
+
+  @override
+  String toString() => "UDisksConfigurationItem('$type', $details)";
+
+  @override
+  bool operator ==(other) {
+    if (!(other is UDisksConfigurationItem) ||
+        other.type != type ||
+        other.details.length != details.length) {
+      return false;
+    }
+    for (var key in details.keys) {
+      if (details[key] != other.details[key]) {
+        return false;
+      }
+    }
+    return true;
+  }
+}
+
+/// A block device on this system.
+class UDisksBlockDevice {
+  final String _blockInterfaceName = 'org.freedesktop.UDisks2.Block';
+
+  final UDisksClient _client;
+  final _UDisksObject _object;
+
+  UDisksBlockDevice(this._client, this._object);
+
+  /// The configuration for the device.
+  /// Use the [addConfigurationItem], [removeConfigurationItem] and [updateConfigurationItem] methods to add, remove and update configuration items.
+  /// Use [getSecretConfiguration] to get the secrets (e.g. passphrases) that may be part of the configuration but isn't exported in this property for security reasons.
+  List<UDisksConfigurationItem> get configuration {
+    var value = _object.getCachedProperty(_blockInterfaceName, 'Configuration');
+    if (value == null) {
+      return [];
+    }
+    if (value.signature != DBusSignature('a(sa{sv})')) {
+      return [];
+    }
+
+    return (value as DBusArray)
+        .children
+        .map((e) => _parseConfigurationItem(e as DBusStruct))
+        .toList();
+  }
+
+  /// The block device that is backing this encrypted device.
+  UDisksBlockDevice? get cryptoBackingDevice {
+    var objectPath = _object.getObjectPathProperty(
+        _blockInterfaceName, 'CryptoBackingDevice');
+    return objectPath != null ? _client._getBlockDevice(objectPath) : null;
+  }
+
+  /// The special device file for the block device e.g. '/dev/sda2'.
+  List<int> get device =>
+      _object.getByteArrayProperty(_blockInterfaceName, 'Device') ?? [];
+
+  /// The dev_t of the block device.
+  int get deviceNumber =>
+      _object.getUint64Property(_blockInterfaceName, 'DeviceNumber') ?? 0;
+
+  /// The drive this block device belongs to.
+  UDisksDrive? get drive {
+    var objectPath =
+        _object.getObjectPathProperty(_blockInterfaceName, 'Drive');
+    return objectPath != null ? _client._getDrive(objectPath) : null;
+  }
+
+  /// True if the device should be automatically started.
+  bool get hintAuto =>
+      _object.getBooleanProperty(_blockInterfaceName, 'HintAuto') ?? false;
+
+  /// If not blank, the icon name to use when presenting the device.
+  String get hintIconName =>
+      _object.getStringProperty(_blockInterfaceName, 'HintIconName') ?? '';
+
+  /// True if the device should be hidden from users.
+  bool get hintIgnore =>
+      _object.getBooleanProperty(_blockInterfaceName, 'HintIgnore') ?? false;
+
+  /// If not blank, the name to use when presenting the device.
+  String get hintName =>
+      _object.getStringProperty(_blockInterfaceName, 'HintName') ?? '';
+
+  /// True if the device is normally expected to be partitionable.
+  bool get hintPartitionable =>
+      _object.getBooleanProperty(_blockInterfaceName, 'HintPartitionable') ??
+      false;
+
+  ///  If not blank, the icon name to use when presenting the device using a symbolic icon.
+  String get hintSymbolicIconName =>
+      _object.getStringProperty(_blockInterfaceName, 'HintSymbolicIconName') ??
+      '';
+
+  /// True if this device is considered a *system device*.
+  bool get hintSystem =>
+      _object.getBooleanProperty(_blockInterfaceName, 'HintSystem') ?? false;
+
+  ///  A unique and persistent identifier for the device or blank if no such identifier is available.
+  String get id => _object.getStringProperty(_blockInterfaceName, 'Id') ?? '';
+
+  /// The label of the filesystem or other structured data on the block device.
+  /// This property is blank if there is no label or the label is unknown.
+  String get idLabel =>
+      _object.getStringProperty(_blockInterfaceName, 'IdLabel') ?? '';
+
+  /// More information about the result of probing the block device.
+  /// Its value depends of the value the [idUsage] property.
+  String get idType =>
+      _object.getStringProperty(_blockInterfaceName, 'IdType') ?? '';
+
+  /// A result of probing for signatures on the block device.
+  String get idUsage =>
+      _object.getStringProperty(_blockInterfaceName, 'IdUsage') ?? '';
+
+  /// The UUID of the filesystem or other structured data on the block device.
+  /// This property is blank if there is no UUID or the UUID is unknown.
+  String get idUUID =>
+      _object.getStringProperty(_blockInterfaceName, 'IdUUID') ?? '';
+
+  /// The version of the filesystem or other structured data on the block device.
+  /// This property is blank if there is no version or the version is unknown.
+  String get idVersion =>
+      _object.getStringProperty(_blockInterfaceName, 'IdVersion') ?? '';
+
+  // FIXME: MDRaid
+
+  // FIXME: MDRaidMember
+
+  /// The special device file to present in the UI instead of the value of the [Device] property.
+  List<int> get preferredDevice =>
+      _object.getByteArrayProperty(_blockInterfaceName, 'PreferredDevice') ??
+      [];
+
+  /// True if the device cannot be written to.
+  bool get readOnly =>
+      _object.getBooleanProperty(_blockInterfaceName, 'ReadOnly') ?? false;
+
+  /// The size of the block device in bytes.
+  int get size => _object.getUint64Property(_blockInterfaceName, 'Size') ?? 0;
+
+  /// Known symlinks in /dev that points to the device file in the [device] property.
+  List<List<int>> get symlinks {
+    var value = _object.getCachedProperty(_blockInterfaceName, 'Symlinks');
+    if (value == null) {
+      return [];
+    }
+    if (value.signature != DBusSignature('aay')) {
+      return [];
+    }
+    List<int> parseByteArray(DBusArray v) =>
+        v.children.map((e) => (e as DBusByte).value).toList();
+    return (value as DBusArray)
+        .children
+        .map((e) => parseByteArray(e as DBusArray))
+        .toList();
+  }
+
+  /// List of userspace mount options..
+  List<String> get userspaceMountOptions =>
+      _object.getStringArrayProperty(
+          _blockInterfaceName, 'UserspaceMountOptions') ??
+      [];
+
+  DBusStruct _encodeConfigurationItem(UDisksConfigurationItem item) {
+    return DBusStruct([
+      DBusString(item.type),
+      DBusDict(
+          DBusSignature('s'),
+          DBusSignature('v'),
+          item.details.map(
+              (key, value) => MapEntry(DBusString(key), DBusVariant(value))))
+    ]);
+  }
+
+  UDisksConfigurationItem _parseConfigurationItem(DBusStruct value) {
+    Map<String, DBusValue> parseConfigurationDetails(DBusDict value) =>
+        value.children.map((key, value) =>
+            MapEntry((key as DBusString).value, (value as DBusVariant).value));
+    return UDisksConfigurationItem(
+        (value.children.elementAt(0) as DBusString).value,
+        parseConfigurationDetails(value.children.elementAt(1) as DBusDict));
+  }
+
+  /// Adds a new configuration item.
+  Future<void> addConfigurationItem(UDisksConfigurationItem item) async {
+    var options = <String, DBusValue>{};
+    var result =
+        await _object.callMethod(_blockInterfaceName, 'AddConfigurationItem', [
+      _encodeConfigurationItem(item),
+      DBusDict(
+          DBusSignature('s'),
+          DBusSignature('v'),
+          options.map(
+              (key, value) => MapEntry(DBusString(key), DBusVariant(value))))
+    ]);
+    if (result.signature != DBusSignature('')) {
+      throw 'org.freedesktop.UDisks2.Block.AddConfigurationItem returned invalid result: ${result.returnValues}';
+    }
+  }
+
+  /// Removes an existing configuration item.
+  Future<void> removeConfigurationItem(UDisksConfigurationItem item) async {
+    var options = <String, DBusValue>{};
+    var result = await _object
+        .callMethod(_blockInterfaceName, 'RemoveConfigurationItem', [
+      _encodeConfigurationItem(item),
+      DBusDict(
+          DBusSignature('s'),
+          DBusSignature('v'),
+          options.map(
+              (key, value) => MapEntry(DBusString(key), DBusVariant(value))))
+    ]);
+    if (result.signature != DBusSignature('')) {
+      throw 'org.freedesktop.UDisks2.Block.RemoveConfigurationItem returned invalid result: ${result.returnValues}';
+    }
+  }
+
+  /// Removes a configuration item and adds a new one.
+  Future<void> updateConfigurationItem(
+      UDisksConfigurationItem oldItem, UDisksConfigurationItem newItem) async {
+    var options = <String, DBusValue>{};
+    var result = await _object
+        .callMethod(_blockInterfaceName, 'UpdateConfigurationItem', [
+      _encodeConfigurationItem(oldItem),
+      _encodeConfigurationItem(newItem),
+      DBusDict(
+          DBusSignature('s'),
+          DBusSignature('v'),
+          options.map(
+              (key, value) => MapEntry(DBusString(key), DBusVariant(value))))
+    ]);
+    if (result.signature != DBusSignature('')) {
+      throw 'org.freedesktop.UDisks2.Block.UpdateConfigurationItem returned invalid result: ${result.returnValues}';
+    }
+  }
+
+  /// Returns the same value as in the [configuration] property but without secret information filtered out.
+  Future<List<UDisksConfigurationItem>> getSecretConfiguration() async {
+    var options = <String, DBusValue>{};
+    var result = await _object
+        .callMethod(_blockInterfaceName, 'GetSecretConfiguration', [
+      DBusDict(
+          DBusSignature('s'),
+          DBusSignature('v'),
+          options.map(
+              (key, value) => MapEntry(DBusString(key), DBusVariant(value))))
+    ]);
+    if (result.signature != DBusSignature('a(sa{sv})')) {
+      throw 'org.freedesktop.UDisks2.Block.GetSecretConfiguration returned invalid result: ${result.returnValues}';
+    }
+    return (result.returnValues[0] as DBusArray)
+        .children
+        .map((item) => _parseConfigurationItem(item as DBusStruct))
+        .toList();
+  }
+
+  /// Formats the device with a file system, partition table or other well-known content.
+  Future<void> format(String type,
+      {bool takeOwnership = false,
+      dynamic? encryptPassphrase,
+      UDisksFormatEraseMethod? erase,
+      bool updatePartitionType = false,
+      bool noBlock = false,
+      bool dryRunFirst = false,
+      bool noDiscard = false,
+      Iterable<UDisksConfigurationItem> configItems = const [],
+      bool tearDown = false}) async {
+    var options = <String, DBusValue>{};
+    if (takeOwnership) {
+      options['take-ownership'] = DBusBoolean(true);
+    }
+    if (encryptPassphrase != null) {
+      if (encryptPassphrase is String) {
+        options['encrypt.passphrase'] = DBusString(encryptPassphrase);
+      } else if (encryptPassphrase is List<int>) {
+        options['encrypt.passphrase'] = DBusArray(
+            DBusSignature('y'), encryptPassphrase.map((v) => DBusByte(v)));
+      } else {
+        throw FormatException('encryptPassphrase must be String or List<int>');
+      }
+    }
+    if (erase != null) {
+      String value;
+      switch (erase) {
+        case UDisksFormatEraseMethod.zero:
+          value = 'zero';
+          break;
+        case UDisksFormatEraseMethod.ataSecureErase:
+          value = 'ata-secure-erase';
+          break;
+        case UDisksFormatEraseMethod.ataSecureEraseEnhanced:
+          value = 'ata-secure-erase-enhanced';
+          break;
+      }
+      options['erase'] = DBusString(value);
+    }
+    if (updatePartitionType) {
+      options['update-partition-type'] = DBusBoolean(true);
+    }
+    if (noBlock) {
+      options['no-block'] = DBusBoolean(true);
+    }
+    if (dryRunFirst) {
+      options['dry-run-first'] = DBusBoolean(true);
+    }
+    if (noDiscard) {
+      options['no-discard'] = DBusBoolean(true);
+    }
+    if (configItems.isNotEmpty) {
+      options['config-items'] = DBusArray(DBusSignature('(sa{sv})'),
+          configItems.map((item) => _encodeConfigurationItem(item)));
+    }
+    if (tearDown) {
+      options['tear-down'] = DBusBoolean(true);
+    }
+    var result = await _object.callMethod(_blockInterfaceName, 'Format', [
+      DBusString(type),
+      DBusDict(
+          DBusSignature('s'),
+          DBusSignature('v'),
+          options.map(
+              (key, value) => MapEntry(DBusString(key), DBusVariant(value))))
+    ]);
+    if (result.signature != DBusSignature('')) {
+      throw 'org.freedesktop.UDisks2.Block.Format returned invalid result: ${result.returnValues}';
+    }
+  }
+
+  /// Request that the kernel and core OS rescans the contents of the device and update their state to reflect this.
+  Future<void> rescan() async {
+    var options = <String, DBusValue>{};
+    var result = await _object.callMethod(_blockInterfaceName, 'Rescan', [
+      DBusDict(
+          DBusSignature('s'),
+          DBusSignature('v'),
+          options.map(
+              (key, value) => MapEntry(DBusString(key), DBusVariant(value))))
+    ]);
+    if (result.signature != DBusSignature('')) {
+      throw 'org.freedesktop.UDisks2.Block.Rescan returned invalid result: ${result.returnValues}';
+    }
+  }
+}
+
 class _UDisksManager {
   _UDisksObject object;
   final String _managerInterfaceName = 'org.freedesktop.UDisks2.Manager';
@@ -222,6 +580,21 @@ class _UDisksObject extends DBusRemoteObject {
       return null;
     }
     return interface.properties[name];
+  }
+
+  /// Gets a cached byte array property, or returns null if not present or not the correct type.
+  List<int>? getByteArrayProperty(String interface, String name) {
+    var value = getCachedProperty(interface, name);
+    if (value == null) {
+      return null;
+    }
+    if (value.signature != DBusSignature('ay')) {
+      return null;
+    }
+    return (value as DBusArray)
+        .children
+        .map((e) => (e as DBusByte).value)
+        .toList();
   }
 
   /// Gets a cached boolean property, or returns null if not present or not the correct type.
@@ -299,6 +672,18 @@ class _UDisksObject extends DBusRemoteObject {
         .toList();
   }
 
+  /// Gets a cached object path property, or returns null if not present or not the correct type.
+  DBusObjectPath? getObjectPathProperty(String interface, String name) {
+    var value = getCachedProperty(interface, name);
+    if (value == null) {
+      return null;
+    }
+    if (value.signature != DBusSignature('o')) {
+      return null;
+    }
+    return (value as DBusObjectPath);
+  }
+
   /// Gets a list of key value pairs, or returns null if not present or not the correct type.
   Map<String, DBusValue>? getConfigurationProperty(
       String interface, String name) {
@@ -332,9 +717,21 @@ class UDisksClient {
   /// Stream of drives as they are removed.
   Stream<UDisksDrive> get driveRemoved => _driveRemovedStreamController.stream;
 
+  /// Stream of block devices as they are added.
+  Stream<UDisksBlockDevice> get blockDeviceAdded =>
+      _blockDeviceAddedStreamController.stream;
+
+  /// Stream of block devices as they are removed.
+  Stream<UDisksBlockDevice> get blockDeviceRemoved =>
+      _blockDeviceRemovedStreamController.stream;
+
   final _driveAddedStreamController = StreamController<UDisksDrive>.broadcast();
   final _driveRemovedStreamController =
       StreamController<UDisksDrive>.broadcast();
+  final _blockDeviceAddedStreamController =
+      StreamController<UDisksBlockDevice>.broadcast();
+  final _blockDeviceRemovedStreamController =
+      StreamController<UDisksBlockDevice>.broadcast();
 
   /// Supported encryption types.
   List<String> get supportedEncryptionTypes =>
@@ -389,6 +786,9 @@ class UDisksClient {
           _objects[signal.changedPath] = object;
           if (_isDrive(object)) {
             _driveAddedStreamController.add(UDisksDrive(object));
+          } else if (_isBlockDevice(object)) {
+            _blockDeviceAddedStreamController
+                .add(UDisksBlockDevice(this, object));
           }
         }
       } else if (signal is DBusObjectManagerInterfacesRemovedSignal) {
@@ -396,6 +796,10 @@ class UDisksClient {
         if (object != null) {
           if (signal.interfaces.contains('org.freedesktop.UDisks2.Drive')) {
             _driveRemovedStreamController.add(UDisksDrive(object));
+          } else if (signal.interfaces
+              .contains('org.freedesktop.UDisks2.Block')) {
+            _blockDeviceRemovedStreamController
+                .add(UDisksBlockDevice(this, object));
           }
           // Note that if not all the interfaces were removed then the object still exists.
           // But in the case of UDisks the only objects we care about only drop interfaces
@@ -440,8 +844,33 @@ class UDisksClient {
     return drives;
   }
 
+  UDisksDrive? _getDrive(DBusObjectPath objectPath) {
+    var object = _objects[objectPath];
+    return object != null ? UDisksDrive(object) : null;
+  }
+
   bool _isDrive(_UDisksObject object) =>
       object.interfaces.containsKey('org.freedesktop.UDisks2.Drive');
+
+  /// The block devices present on this system.
+  /// Use [blockDeviceAdded] and [blockDeviceRemoved] to detect when this list changes.
+  List<UDisksBlockDevice> get blockDevices {
+    var blockDevices = <UDisksBlockDevice>[];
+    for (var object in _objects.values) {
+      if (_isBlockDevice(object)) {
+        blockDevices.add(UDisksBlockDevice(this, object));
+      }
+    }
+    return blockDevices;
+  }
+
+  UDisksBlockDevice? _getBlockDevice(DBusObjectPath objectPath) {
+    var object = _objects[objectPath];
+    return object != null ? UDisksBlockDevice(this, object) : null;
+  }
+
+  bool _isBlockDevice(_UDisksObject object) =>
+      object.interfaces.containsKey('org.freedesktop.UDisks2.Block');
 
   /// Terminates all active connections. If a client remains unclosed, the Dart process may not terminate.
   Future<void> close() async {
