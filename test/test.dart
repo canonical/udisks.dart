@@ -250,8 +250,8 @@ void main() {
     var clientAddress =
         await server.listenAddress(DBusAddress.unix(dir: Directory.systemTemp));
 
-    var upower = MockUDisksServer(clientAddress, version: '1.2.3');
-    await upower.start();
+    var udisks = MockUDisksServer(clientAddress, version: '1.2.3');
+    await udisks.start();
 
     var client = UDisksClient(bus: DBusClient(clientAddress));
     await client.connect();
@@ -266,10 +266,10 @@ void main() {
     var clientAddress =
         await server.listenAddress(DBusAddress.unix(dir: Directory.systemTemp));
 
-    var upower = MockUDisksServer(clientAddress,
+    var udisks = MockUDisksServer(clientAddress,
         supportedEncryptionTypes: ['luks1', 'luks2'],
         defaultEncryptionType: 'luks1');
-    await upower.start();
+    await udisks.start();
 
     var client = UDisksClient(bus: DBusClient(clientAddress));
     await client.connect();
@@ -285,7 +285,7 @@ void main() {
     var clientAddress =
         await server.listenAddress(DBusAddress.unix(dir: Directory.systemTemp));
 
-    var upower = MockUDisksServer(clientAddress, supportedFilesystems: [
+    var udisks = MockUDisksServer(clientAddress, supportedFilesystems: [
       'ext2',
       'ext3',
       'ext4',
@@ -294,7 +294,7 @@ void main() {
       'brtfs',
       'swap'
     ]);
-    await upower.start();
+    await udisks.start();
 
     var client = UDisksClient(bus: DBusClient(clientAddress));
     await client.connect();
@@ -310,8 +310,8 @@ void main() {
     var clientAddress =
         await server.listenAddress(DBusAddress.unix(dir: Directory.systemTemp));
 
-    var upower = MockUDisksServer(clientAddress);
-    await upower.start();
+    var udisks = MockUDisksServer(clientAddress);
+    await udisks.start();
 
     var client = UDisksClient(bus: DBusClient(clientAddress));
     await client.connect();
@@ -326,11 +326,11 @@ void main() {
     var clientAddress =
         await server.listenAddress(DBusAddress.unix(dir: Directory.systemTemp));
 
-    var upower = MockUDisksServer(clientAddress);
-    await upower.start();
-    await upower.addDrive('drive1');
-    await upower.addDrive('drive2');
-    await upower.addDrive('drive3');
+    var udisks = MockUDisksServer(clientAddress);
+    await udisks.start();
+    await udisks.addDrive('drive1');
+    await udisks.addDrive('drive2');
+    await udisks.addDrive('drive3');
 
     var client = UDisksClient(bus: DBusClient(clientAddress));
     await client.connect();
@@ -348,8 +348,8 @@ void main() {
     var clientAddress =
         await server.listenAddress(DBusAddress.unix(dir: Directory.systemTemp));
 
-    var upower = MockUDisksServer(clientAddress);
-    await upower.start();
+    var udisks = MockUDisksServer(clientAddress);
+    await udisks.start();
 
     var client = UDisksClient(bus: DBusClient(clientAddress));
     await client.connect();
@@ -358,7 +358,7 @@ void main() {
       expect(drive.id, equals('drive'));
     }));
 
-    await upower.addDrive('drive');
+    await udisks.addDrive('drive');
   });
 
   test('drive removed', () async {
@@ -366,18 +366,18 @@ void main() {
     var clientAddress =
         await server.listenAddress(DBusAddress.unix(dir: Directory.systemTemp));
 
-    var upower = MockUDisksServer(clientAddress);
-    await upower.start();
+    var udisks = MockUDisksServer(clientAddress);
+    await udisks.start();
 
     var client = UDisksClient(bus: DBusClient(clientAddress));
     await client.connect();
-    var d = await upower.addDrive('drive');
+    var d = await udisks.addDrive('drive');
 
     client.driveRemoved.listen(expectAsync1((drive) {
       expect(drive.id, equals('drive'));
     }));
 
-    upower.removeDrive(d);
+    udisks.removeDrive(d);
   });
 
   test('drive properties', () async {
@@ -385,9 +385,9 @@ void main() {
     var clientAddress =
         await server.listenAddress(DBusAddress.unix(dir: Directory.systemTemp));
 
-    var upower = MockUDisksServer(clientAddress);
-    await upower.start();
-    await upower.addDrive('drive',
+    var udisks = MockUDisksServer(clientAddress);
+    await udisks.start();
+    await udisks.addDrive('drive',
         canPowerOff: true,
         configuration: {'key1': DBusString('value1'), 'key2': DBusUint32(2)},
         connectionBus: 'CONNECTION-BUS',
@@ -461,9 +461,9 @@ void main() {
     var clientAddress =
         await server.listenAddress(DBusAddress.unix(dir: Directory.systemTemp));
 
-    var upower = MockUDisksServer(clientAddress);
-    await upower.start();
-    var d = await upower.addDrive('drive');
+    var udisks = MockUDisksServer(clientAddress);
+    await udisks.start();
+    var d = await udisks.addDrive('drive');
 
     var client = UDisksClient(bus: DBusClient(clientAddress));
     await client.connect();
@@ -484,9 +484,9 @@ void main() {
     var clientAddress =
         await server.listenAddress(DBusAddress.unix(dir: Directory.systemTemp));
 
-    var upower = MockUDisksServer(clientAddress);
-    await upower.start();
-    var d = await upower.addDrive('drive');
+    var udisks = MockUDisksServer(clientAddress);
+    await udisks.start();
+    var d = await udisks.addDrive('drive');
 
     var client = UDisksClient(bus: DBusClient(clientAddress));
     await client.connect();
@@ -505,9 +505,9 @@ void main() {
     var clientAddress =
         await server.listenAddress(DBusAddress.unix(dir: Directory.systemTemp));
 
-    var upower = MockUDisksServer(clientAddress);
-    await upower.start();
-    var d = await upower.addDrive('drive');
+    var udisks = MockUDisksServer(clientAddress);
+    await udisks.start();
+    var d = await udisks.addDrive('drive');
 
     var client = UDisksClient(bus: DBusClient(clientAddress));
     await client.connect();
