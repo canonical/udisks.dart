@@ -14,10 +14,9 @@ class MockUDisksManager extends DBusObject {
   Map<String, Map<String, DBusValue>> get interfacesAndProperties => {
         'org.freedesktop.UDisks2.Manager': {
           'DefaultEncryptionType': DBusString(server.defaultEncryptionType),
-          'SupportedEncryptionTypes': DBusArray(DBusSignature('s'),
-              server.supportedEncryptionTypes.map((type) => DBusString(type))),
-          'SupportedFilesystems': DBusArray(DBusSignature('s'),
-              server.supportedFilesystems.map((name) => DBusString(name))),
+          'SupportedEncryptionTypes':
+              DBusArray.string(server.supportedEncryptionTypes),
+          'SupportedFilesystems': DBusArray.string(server.supportedFilesystems),
           'Version': DBusString(server.version)
         }
       };
@@ -92,19 +91,14 @@ class MockUDisksDrive extends DBusObject {
   Map<String, Map<String, DBusValue>> get interfacesAndProperties => {
         'org.freedesktop.UDisks2.Drive': {
           'CanPowerOff': DBusBoolean(canPowerOff),
-          'Configuration': DBusDict(
-              DBusSignature('s'),
-              DBusSignature('v'),
-              configuration.map((key, value) =>
-                  MapEntry(DBusString(key), DBusVariant(value)))),
+          'Configuration': DBusDict.stringVariant(configuration),
           'ConnectionBus': DBusString(connectionBus),
           'Ejectable': DBusBoolean(ejectable),
           'Id': DBusString(id),
           'Media': DBusString(media),
           'MediaAvailable': DBusBoolean(mediaAvailable),
           'MediaChangeDetected': DBusBoolean(mediaChangeDetected),
-          'MediaCompatibility': DBusArray(DBusSignature('s'),
-              mediaCompatibility.map((value) => DBusString(value))),
+          'MediaCompatibility': DBusArray.string(mediaCompatibility),
           'MediaRemovable': DBusBoolean(mediaRemovable),
           'Model': DBusString(model),
           'Optical': DBusBoolean(optical),
@@ -230,8 +224,7 @@ class MockUDisksBlockDevice extends DBusObject {
                   .map((item) => _encodeConfigurationItem(item))),
           'CryptoBackingDevice':
               cryptoBackingDevice?.path ?? DBusObjectPath('/'),
-          'Device':
-              DBusArray(DBusSignature('y'), device.map((e) => DBusByte(e))),
+          'Device': DBusArray.byte(device),
           'DeviceNumber': DBusUint64(deviceNumber),
           'Drive': drive?.path ?? DBusObjectPath('/'),
           'Id': DBusString(id),
@@ -249,16 +242,12 @@ class MockUDisksBlockDevice extends DBusObject {
           'HintSystem': DBusBoolean(hintSystem),
 //'MDRaid': DBusObjectPath(MDRaid),
 //'MDRaidMember': DBusObjectPath(MDRaidMember),
-          'PreferredDevice': DBusArray(
-              DBusSignature('y'), preferredDevice.map((e) => DBusByte(e))),
+          'PreferredDevice': DBusArray.byte(preferredDevice),
           'ReadOnly': DBusBoolean(readOnly),
           'Size': DBusUint64(size),
-          'Symlinks': DBusArray(
-              DBusSignature('ay'),
-              symlinks.map((link) =>
-                  DBusArray(DBusSignature('y'), link.map((e) => DBusByte(e))))),
-          'UserspaceMountOptions': DBusArray(DBusSignature('s'),
-              userspaceMountOptions.map((option) => DBusString(option)))
+          'Symlinks': DBusArray(DBusSignature('ay'),
+              symlinks.map((link) => DBusArray.byte(link))),
+          'UserspaceMountOptions': DBusArray.string(userspaceMountOptions)
         }
       };
   @override
@@ -367,14 +356,8 @@ class MockUDisksBlockDevice extends DBusObject {
   }
 
   DBusStruct _encodeConfigurationItem(UDisksConfigurationItem item) {
-    return DBusStruct([
-      DBusString(item.type),
-      DBusDict(
-          DBusSignature('s'),
-          DBusSignature('v'),
-          item.details.map(
-              (key, value) => MapEntry(DBusString(key), DBusVariant(value))))
-    ]);
+    return DBusStruct(
+        [DBusString(item.type), DBusDict.stringVariant(item.details)]);
   }
 }
 
