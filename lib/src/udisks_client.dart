@@ -133,19 +133,22 @@ class UDisksDrive {
   /// Sets the configuration for the drive.
   Future<void> setConfiguration(Map<String, DBusValue> values) async {
     await _object.callMethod(_driveInterfaceName, 'SetConfiguration',
-        [DBusDict.stringVariant(values), DBusDict.stringVariant({})]);
+        [DBusDict.stringVariant(values), DBusDict.stringVariant({})],
+        replySignature: DBusSignature(''));
   }
 
   /// Ejects media from this drive.
   Future<void> eject() async {
-    await _object
-        .callMethod(_driveInterfaceName, 'Eject', [DBusDict.stringVariant({})]);
+    await _object.callMethod(
+        _driveInterfaceName, 'Eject', [DBusDict.stringVariant({})],
+        replySignature: DBusSignature(''));
   }
 
   /// Arranges for the drive to be safely removed and powered off.
   Future<void> powerOff() async {
     await _object.callMethod(
-        _driveInterfaceName, 'PowerOff', [DBusDict.stringVariant({})]);
+        _driveInterfaceName, 'PowerOff', [DBusDict.stringVariant({})],
+        replySignature: DBusSignature(''));
   }
 }
 
@@ -340,50 +343,40 @@ class UDisksBlockDevice {
   /// Adds a new configuration item.
   Future<void> addConfigurationItem(UDisksConfigurationItem item) async {
     var options = <String, DBusValue>{};
-    var result = await _object.callMethod(
-        _blockInterfaceName,
-        'AddConfigurationItem',
-        [_encodeConfigurationItem(item), DBusDict.stringVariant(options)]);
-    if (result.signature != DBusSignature('')) {
-      throw 'org.freedesktop.UDisks2.Block.AddConfigurationItem returned invalid result: ${result.returnValues}';
-    }
+    await _object.callMethod(_blockInterfaceName, 'AddConfigurationItem',
+        [_encodeConfigurationItem(item), DBusDict.stringVariant(options)],
+        replySignature: DBusSignature(''));
   }
 
   /// Removes an existing configuration item.
   Future<void> removeConfigurationItem(UDisksConfigurationItem item) async {
     var options = <String, DBusValue>{};
-    var result = await _object.callMethod(
-        _blockInterfaceName,
-        'RemoveConfigurationItem',
-        [_encodeConfigurationItem(item), DBusDict.stringVariant(options)]);
-    if (result.signature != DBusSignature('')) {
-      throw 'org.freedesktop.UDisks2.Block.RemoveConfigurationItem returned invalid result: ${result.returnValues}';
-    }
+    await _object.callMethod(_blockInterfaceName, 'RemoveConfigurationItem',
+        [_encodeConfigurationItem(item), DBusDict.stringVariant(options)],
+        replySignature: DBusSignature(''));
   }
 
   /// Removes a configuration item and adds a new one.
   Future<void> updateConfigurationItem(
       UDisksConfigurationItem oldItem, UDisksConfigurationItem newItem) async {
     var options = <String, DBusValue>{};
-    var result = await _object
-        .callMethod(_blockInterfaceName, 'UpdateConfigurationItem', [
-      _encodeConfigurationItem(oldItem),
-      _encodeConfigurationItem(newItem),
-      DBusDict.stringVariant(options)
-    ]);
-    if (result.signature != DBusSignature('')) {
-      throw 'org.freedesktop.UDisks2.Block.UpdateConfigurationItem returned invalid result: ${result.returnValues}';
-    }
+    await _object.callMethod(
+        _blockInterfaceName,
+        'UpdateConfigurationItem',
+        [
+          _encodeConfigurationItem(oldItem),
+          _encodeConfigurationItem(newItem),
+          DBusDict.stringVariant(options)
+        ],
+        replySignature: DBusSignature(''));
   }
 
   /// Returns the same value as in the [configuration] property but without secret information filtered out.
   Future<List<UDisksConfigurationItem>> getSecretConfiguration() async {
     var options = <String, DBusValue>{};
     var result = await _object.callMethod(_blockInterfaceName,
-        'GetSecretConfiguration', [DBusDict.stringVariant(options)]);
-    if (result.signature != DBusSignature('a(sa{sv})')) {
-      throw 'org.freedesktop.UDisks2.Block.GetSecretConfiguration returned invalid result: ${result.returnValues}';
-    }
+        'GetSecretConfiguration', [DBusDict.stringVariant(options)],
+        replySignature: DBusSignature('a(sa{sv})'));
     return (result.returnValues[0] as DBusArray)
         .children
         .map((item) => _parseConfigurationItem(item as DBusStruct))
@@ -448,21 +441,17 @@ class UDisksBlockDevice {
     if (tearDown) {
       options['tear-down'] = DBusBoolean(true);
     }
-    var result = await _object.callMethod(_blockInterfaceName, 'Format',
-        [DBusString(type), DBusDict.stringVariant(options)]);
-    if (result.signature != DBusSignature('')) {
-      throw 'org.freedesktop.UDisks2.Block.Format returned invalid result: ${result.returnValues}';
-    }
+    await _object.callMethod(_blockInterfaceName, 'Format',
+        [DBusString(type), DBusDict.stringVariant(options)],
+        replySignature: DBusSignature(''));
   }
 
   /// Request that the kernel and core OS rescans the contents of the device and update their state to reflect this.
   Future<void> rescan() async {
     var options = <String, DBusValue>{};
-    var result = await _object.callMethod(
-        _blockInterfaceName, 'Rescan', [DBusDict.stringVariant(options)]);
-    if (result.signature != DBusSignature('')) {
-      throw 'org.freedesktop.UDisks2.Block.Rescan returned invalid result: ${result.returnValues}';
-    }
+    await _object.callMethod(
+        _blockInterfaceName, 'Rescan', [DBusDict.stringVariant(options)],
+        replySignature: DBusSignature(''));
   }
 }
 
