@@ -393,7 +393,7 @@ class UDisksBlockDevice {
   /// Formats the device with a file system, partition table or other well-known content.
   Future<void> format(String type,
       {bool takeOwnership = false,
-      dynamic? encryptPassphrase,
+      dynamic encryptPassphrase,
       UDisksFormatEraseMethod? erase,
       bool updatePartitionType = false,
       bool noBlock = false,

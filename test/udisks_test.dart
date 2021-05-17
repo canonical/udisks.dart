@@ -175,7 +175,7 @@ class MockUDisksBlockDevice extends DBusObject {
 
   String? formatType;
   bool? formatTakeOwnership;
-  dynamic? formatEncryptPassphrase;
+  dynamic formatEncryptPassphrase;
   String? formatErase;
   bool? formatUpdatePartitionType;
   bool? formatNoBlock;
