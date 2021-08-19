@@ -758,7 +758,7 @@ class UDisksClient {
           // If all the interface are removed, then this object has been removed.
           // Keep the previous values around for the client to use.
           if (object.wouldRemoveAllInterfaces(signal.interfaces)) {
-            _objects.remove(object);
+            _objects.remove(signal.changedPath);
           } else {
             object.removeInterfaces(signal.interfaces);
           }
