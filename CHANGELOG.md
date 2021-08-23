@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+* Update to dbus 0.6.
+
 ## 0.2.1
 
 * Fix detection of removed drive/block device when they re-appear.
