@@ -1,4 +1,5 @@
 [![Pub Package](https://img.shields.io/pub/v/udisks.svg)](https://pub.dev/packages/udisks)
+[![codecov](https://codecov.io/gh/canonical/udisks.dart/branch/main/graph/badge.svg?token=OY0ZQCREQJ)](https://codecov.io/gh/canonical/udisks.dart)
 
 Provides a client to connect to
 [UDisks](https://github.com/storaged-project/udisks) - the service that accesses and manipulates disks, storage devices and technologies on Linux.
