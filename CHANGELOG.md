@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+* Only list as supporting Linux.
+
 ## 0.3.0
 
 * Update to dbus 0.6.
