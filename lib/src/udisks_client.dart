@@ -167,7 +167,7 @@ class UDisksConfigurationItem {
 
   @override
   bool operator ==(other) {
-    if (!(other is UDisksConfigurationItem) ||
+    if (other is! UDisksConfigurationItem ||
         other.type != type ||
         other.details.length != details.length) {
       return false;
@@ -179,6 +179,9 @@ class UDisksConfigurationItem {
     }
     return true;
   }
+
+  @override
+  int get hashCode => type.hashCode | details.hashCode;
 }
 
 /// A block device on this system.
