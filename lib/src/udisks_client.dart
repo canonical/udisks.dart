@@ -181,7 +181,7 @@ class UDisksConfigurationItem {
   }
 
   @override
-  int get hashCode => type.hashCode | details.hashCode;
+  int get hashCode => Object.hash(type, details);
 }
 
 /// A block device on this system.
