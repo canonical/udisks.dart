@@ -1,5 +1,11 @@
 # Changelog
 
+## O.4.0
+
+* Update to dbus 0.7.
+* Use Object.hash for hashCode calculations.
+* Add more example programs.
+
 ## 0.3.1
 
 * Only list as supporting Linux.
