@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.0
+
+* Update to dbus 0.8.
+
 ## 0.4.0
 
 * Update to dbus 0.7.
